@@ -56,20 +56,17 @@ class DataLoader:
                             fpath = os.path.join(root, fname)
                             with open(fpath, "r", encoding="utf-8", errors="ignore") as fh:
                                 for line in fh:
-                                    self.dataset += self._clean_tweet(nltk.sent_tokenize(line))
-                                    self.total_sentences += 1
+                                    self.dataset += self._clean_tweet(line)
+                                    self.total_sentences += len(nltk.sent_tokenize(line))
             else:
                 with open(self.path, "r", encoding="utf-8", errors="ignore") as fh:
                     for line in fh:
                         self.dataset += self._clean_tweet(line)
                         self.total_sentences += len(nltk.sent_tokenize(line))
+                
+        print(self.total_sentences)
 
-    @staticmethod
-    def _clean_tweet(text: str) -> str:
-        
-        # Pull out just the tweet, not the metadata
-        text = text.split("\t")[5]
-
+    def _clean_tweet(self, text: str) -> str:
         """Clean tweet text by removing mentions, URLs, hashtags, emojis, etc."""
         # remove mentions
         text = re.sub(r"@\w+", " ", text)
@@ -89,7 +86,6 @@ class DataLoader:
             if text[-1] in "abcdefghijklmnopqrstuvwxyz0123456789":
                 text = text + "."
             text = text + " "
-
         return text.lower().strip()
 
     def _clean_interview(self, path: str) -> str:

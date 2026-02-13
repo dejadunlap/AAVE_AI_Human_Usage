@@ -4,8 +4,9 @@ Includes detection methods for various phonological and grammatical features.
 """
 import re
 import nltk
-from typing import Optional
+from typing import Optional, Union
 from spacy.language import Language
+from spacy.tokens import Doc
 nltk.download('punkt_tab')
 
 
@@ -15,6 +16,12 @@ class LinguisticFeatureDetector:
     def __init__(self, nlp: Language):
         """Initialize with a spaCy language model."""
         self.nlp = nlp
+    
+    def _get_doc(self, text: Union[str, Doc]) -> Doc:
+        """Convert string to Doc if needed, or return Doc as-is."""
+        if isinstance(text, Doc):
+            return text
+        return self.nlp(text)
     
     # ===== Ain't Feature =====
     
@@ -29,9 +36,9 @@ class LinguisticFeatureDetector:
     
     # ===== Negative Concord =====
     
-    def has_negative_concord(self, sent: str) -> bool:
+    def has_negative_concord(self, sent: Union[str, Doc]) -> bool:
         """True if sentence likely exhibits negative concord."""
-        doc = self.nlp(sent)
+        doc = self._get_doc(sent)
         neg_count = 0
         for tok in doc:
             if tok.dep_ == "neg":
@@ -40,19 +47,18 @@ class LinguisticFeatureDetector:
                 # Changed to "elif" to avoid double counting
                 neg_count += 1
 
-        # Making the return structure more similar to other functions
-        if neg_count >= 2:
-            return True
-        else:
-            return False
+        return neg_count >= 2
+        
     
     # ===== Habitual 'be' =====
     
-    def has_habitual_be(self, sent: str) -> bool:
+    def has_habitual_be(self, sent: Union[str, Doc]) -> bool:
         """Detect habitual 'be' (exclude future "will/gonna/going to be")."""
-        if re.search(r"\b(will|gonna|going to|gon|gwine)\s+be\b", sent.lower()):
+        # Extract text for regex check
+        text = sent.text if isinstance(sent, Doc) else sent
+        if re.search(r"\b(will|gonna|going to|gon|gwine)\s+be\b", text.lower()):
             return False
-        doc = self.nlp(sent)
+        doc = self._get_doc(sent)
         for s in doc.sents:
             toks = list(s)
             for i, tok in enumerate(toks):
@@ -79,11 +85,12 @@ class LinguisticFeatureDetector:
                     return True
         return False
 
-    def get_habitual_be_subject(self, sent: str) -> Optional[str]:
+    def get_habitual_be_subject(self, sent: Union[str, Doc]) -> Optional[str]:
         """Return subject (lowercased) for the first habitual 'be' in a sentence."""
-        if re.search(r"\b(will|gonna|going to|gon|gwine)\s+be\b", sent.lower()):
+        text = sent.text if isinstance(sent, Doc) else sent
+        if re.search(r"\b(will|gonna|going to|gon|gwine)\s+be\b", text.lower()):
             return None
-        doc = self.nlp(sent)
+        doc = self._get_doc(sent)
         for s in doc.sents:
             toks = list(s)
             for i, tok in enumerate(toks):
@@ -113,7 +120,7 @@ class LinguisticFeatureDetector:
     
     # ===== Double Comparative/Superlative =====
     
-    def has_double_comparative(self, sent: str) -> bool:
+    def has_double_comparative(self, sent: Union[str, Doc]) -> bool:
         """
         True if:
           - 'more/less' + comparative, or
@@ -123,7 +130,7 @@ class LinguisticFeatureDetector:
         _IRREG_SUPS = {"best", "worst", "furthest", "farthest", "least"}
         _DEG_SKIP = {"much", "far", "way", "even", "very", "really", "so", "real", "kinda", "sorta", "a", "lot"}
 
-        doc = self.nlp(sent)
+        doc = self._get_doc(sent)
         for s in doc.sents:
             toks = list(s)
             n = len(toks)
@@ -177,13 +184,13 @@ class LinguisticFeatureDetector:
             steps += 1
         return h
 
-    def has_multiple_modals(self, sent: str, max_gap_tokens: int = 1) -> bool:
+    def has_multiple_modals(self, sent: Union[str, Doc], max_gap_tokens: int = 1) -> bool:
         """Detect multiple modal verbs in close succession."""
         _SKIP_BETWEEN = {
             "not", "n't", "really", "just", "probably", "maybe", "kinda", "sorta", "still",
             "always", "usually", "often", "ever", "even", "real", "so", "too", "very", "pretty", "right"
         }
-        doc = self.nlp(sent)
+        doc = self._get_doc(sent)
         for s in doc.sents:
             toks = list(s)
             mods = [t for t in toks if self._is_modal_token(t)]
@@ -203,11 +210,11 @@ class LinguisticFeatureDetector:
     
     # ===== Perfective 'done' =====
     
-    def has_perfective_done(self, sent: str, max_gap_tokens: int = 3) -> bool:
+    def has_perfective_done(self, sent: Union[str, Doc], max_gap_tokens: int = 3) -> bool:
         """Detect perfective 'done' (e.g., 'I done did it')."""
         _DONE_SKIP = {"already", "just", "really", "right", "kinda", "sorta", "still", "always", "usually",
                       "often", "even", "ever", "so", "very", "pretty", "real"}
-        doc = self.nlp(sent)
+        doc = self._get_doc(sent)
         for s in doc.sents:
             toks = list(s)
             n = len(toks)
@@ -240,11 +247,11 @@ class LinguisticFeatureDetector:
                     return True
         return False
 
-    def get_perfective_done_subject(self, sent: str, max_gap_tokens: int = 3) -> Optional[str]:
+    def get_perfective_done_subject(self, sent: Union[str, Doc], max_gap_tokens: int = 3) -> Optional[str]:
         """Get the subject of a perfective 'done' construction."""
         _DONE_SKIP = {"already", "just", "really", "right", "kinda", "sorta", "still", "always", "usually",
                       "often", "even", "ever", "so", "very", "pretty", "real"}
-        doc = self.nlp(sent)
+        doc = self._get_doc(sent)
         for s in doc.sents:
             toks = list(s); n = len(toks)
             for i, tok in enumerate(toks):
@@ -290,14 +297,14 @@ class LinguisticFeatureDetector:
     
     # ===== Null Copula =====
     
-    def has_null_copula(self, sent: str, max_gap_tokens: int = 2, block_I: bool = True) -> bool:
+    def has_null_copula(self, sent: Union[str, Doc], max_gap_tokens: int = 2, block_I: bool = True) -> bool:
         """Detect null copula (missing 'be' between subject and predicate)."""
         def is_be_like(t):
             lo = t.text.lower()
             return ((t.lemma_ == "be" and t.pos_ in {"AUX", "VERB"}) or
                     lo in {"'s", "'s", "'re", "'re", "'m", "'m", "ain't", "aint", "ain't"})
 
-        doc = self.nlp(sent)
+        doc = self._get_doc(sent)
         for s in doc.sents:
             toks = list(s)
             for head in toks:
@@ -323,14 +330,14 @@ class LinguisticFeatureDetector:
                     return True
         return False
 
-    def get_null_copula_subject(self, sent: str, max_gap_tokens: int = 2, block_I: bool = True) -> Optional[str]:
+    def get_null_copula_subject(self, sent: Union[str, Doc], max_gap_tokens: int = 2, block_I: bool = True) -> Optional[str]:
         """Get the subject of a null copula construction."""
         def is_be_like(t):
             lo = t.text.lower()
             return ((t.lemma_ == "be" and t.pos_ in {"AUX", "VERB"}) or
                     lo in {"'s", "'s", "'re", "'re", "'m", "'m", "ain't", "aint", "ain't"})
 
-        doc = self.nlp(sent)
+        doc = self._get_doc(sent)
         for s in doc.sents:
             toks = list(s)
             for head in toks:

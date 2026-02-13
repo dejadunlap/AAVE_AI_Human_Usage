@@ -14,9 +14,12 @@ This is the code we used for comparing model-human usage of African American Ver
 
 ## Requirements & recommended Python version
 run ```pip install -r requirement.txt``` to download the packages for this project.
+If running the feature analyzer you should also run ```python -m spacy download en_core_web_sm``` for the tokenizing elements
 
 ## Quick start — example usage
-Open a Python scripts and run the below code (data available on request).
+The `run.py` file has the necessary set up to complete the feature analysis on the existing dataset for this project or your own dataset (with some tinkering to the dataloader). 
+
+You could also experiements with the below code.
 
 1) Basic end-to-end analysis (interview data):
 
@@ -77,6 +80,8 @@ plot_feature_rates(df)
 - `data_handling/` — text loading & cleaning (DataLoader)
 - `linguistic/` — feature detection & analyzer (`AAVEFeatureComparison`, `LinguisticFeatureDetector`)
 - `analysis/` — statistical tests, contextual analysis, sentiment, and plotting helpers
+
+Data available on request. Once downloaded the dataset and place into a `data/interview` and `data/tweet` folders.
 
 ---
 

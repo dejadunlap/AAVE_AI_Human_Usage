@@ -5,6 +5,9 @@ scipy>=1.7
 matplotlib>=3.4
 nltk>=3.6
 spacy>=3.5
+together
+openai
+seaborn
 
 # Recommended (download separately)
 # - spaCy language model: python -m spacy download en_core_web_sm

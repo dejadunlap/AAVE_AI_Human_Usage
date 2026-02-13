@@ -9,6 +9,7 @@ import os
 import sys
 from pathlib import Path
 from datetime import datetime
+from typing import List
 
 from linguistic import AAVEFeatureComparison
 
@@ -36,7 +37,7 @@ def validate_data_path(data_path: str) -> bool:
     return True
 
 
-def run_lexical_feature_detection(data_path: str, data_type: str, human: bool, verbose: bool = False):
+def run_lexical_feature_detection(data_path: str, data_type: str, human: bool, verbose: bool = False, human_keys: List[str] = None):
     """
     Run lexical feature detection on dataset.
     
@@ -53,6 +54,7 @@ def run_lexical_feature_detection(data_path: str, data_type: str, human: bool, v
     try:
 
         # analyzer
+        print(f"Loading into analyzer for data path {data_path}")
         analyzer = AAVEFeatureComparison(
             path=data_path,
             data_type=data_type,
@@ -60,12 +62,15 @@ def run_lexical_feature_detection(data_path: str, data_type: str, human: bool, v
         )
         
         # Load data
+        print(f"Loading Data at Path {data_path}")
         analyzer.load_data()
         
         # Run lexical feature analysis
-        top_be, top_null, top_done, top_aint = analyzer.lexical_feature()
+        print(f"Running Feature Analysis")
+        top_be, top_null, top_done, top_aint = analyzer.lexical_feature(human_keys=human_keys)
         
         # Compile results
+        print(f"Compiling Results")
         results = {
             "timestamp": datetime.now().isoformat(),
             "configuration": {
@@ -80,7 +85,7 @@ def run_lexical_feature_detection(data_path: str, data_type: str, human: bool, v
                 "be": analyzer.feature_prob["be"],
                 "null_copula": analyzer.feature_prob["null_copula"],
                 "perfective_done": analyzer.feature_prob["perf_done"],
-                "aint": analyzer.feature_prob["ain't"]
+                "aint": analyzer.feature_prob["aint"]
             },
             "top_preceding_words": {
                 "habitual_be": top_be,
@@ -127,10 +132,7 @@ def print_results(results: dict):
         if words_dict:
             sorted_words = sorted(words_dict.items(), key=lambda x: x[1], reverse=True)
             for i, (word, count) in enumerate(sorted_words, 1):
-                prob = results["feature_probabilities"].get(
-                    feature_name.replace("_", "").replace("habitual", "be").replace("aint", "aint"),
-                    {}
-                ).get(word, 0)
+                prob = results["feature_probabilities"].get(word, 0)
                 print(f"  {i}. {word} | Count: {count} | P(feature|word): {prob}")
         else:
             print("No occurrences found")
@@ -151,9 +153,13 @@ def save_results(results: dict, output_path: str):
 def main():
     """Main entry point."""
     # Validate data path
-    for type in ["interview", "tweet"]:
-        for data in ["human", "openai", "google", "meta"]:
-            DATA_PATH = f"./data/{type}/{data}_{type}"
+    for type in ["tweet"]:
+        human_keys = None
+        for data in ["openai"]:
+            if data == "human" and type == "tweet":
+               DATA_PATH = "./data/tweet/human_tweet/human_tweet.txt"
+            else:
+                DATA_PATH = f"./data/{type}/{data}_{type}"
             if not validate_data_path(DATA_PATH):
                 sys.exit(1)
 
@@ -167,8 +173,12 @@ def main():
             data_path=DATA_PATH,
             data_type=type,
             human=HUMAN_ONLY,
-            verbose=VERBOSE
+            verbose=VERBOSE,
+            human_keys=human_keys
             )
+
+            if HUMAN_ONLY:
+                human_keys = results["top_preceding_words"]
     
             # Print results
             print_results(results)
