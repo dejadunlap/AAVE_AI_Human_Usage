@@ -159,7 +159,16 @@ class AAVEFeatureComparison:
     
     def _count_aint_tokens(self) -> int:
         """Count occurrences of ain't/ain't/aint as standalone tokens."""
-        return len(re.findall(r"\b(?:ain't|ain't|aint)\b", self.dataset))
+
+        # This should be a count of sentences containing "ain't", not
+        # a count of how many times "ain't" occurs overall
+        count_aint = 0
+        for sentence in self.sentences():
+            words = sentence.split()
+            if "ain't" in words or "aint" in words:
+                count_aint += 1>                 
+        return count_aint
+
     
     def feature_densities(self) -> None:
         """Normalize feature counts by sentence count and compute ain't rate."""

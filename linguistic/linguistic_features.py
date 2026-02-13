@@ -35,9 +35,15 @@ class LinguisticFeatureDetector:
         for tok in doc:
             if tok.dep_ == "neg":
                 neg_count += 1
-            if tok.text.lower() in {"no", "nothing", "nobody", "never", "none", "nowhere"}:
+            elif tok.text.lower() in {"no", "nothing", "nobody", "never", "none", "nowhere"}:
+                # Changed to "elif" to avoid double counting
                 neg_count += 1
-        return neg_count >= 2
+
+        # Making the return structure more similar to other functions
+        if neg_count >= 2:
+            return True
+        else:
+            return False
     
     # ===== Habitual 'be' =====
     
@@ -49,8 +55,20 @@ class LinguisticFeatureDetector:
         for s in doc.sents:
             toks = list(s)
             for i, tok in enumerate(toks):
-                if tok.lemma_ != "be":
+                if tok.text.lower() != "be": # We want the string "be", not the lemma "be"
                     continue
+
+                # Need to rule out the possibility that it's preceded by
+                # a modal that takes an infinite
+                if i-1 >= 0:
+                    prev_word = toks[i-1].text
+                    if prev_word in ["n't", "do", "would", "could", "should", "might", "must", "can", "may", "will", "shall"]:
+                        continue
+                if i-2 >= 0:
+                    prev2_word = toks[i-1].text
+                    if prev2_word in ["n't", "do", "would", "could", "should", "might", "must", "can", "may", "will", "shall"]:
+                        continue
+
                 prog = next((t for t in toks[i + 1:i + 5] if t.tag_ == "VBG" or t.text.lower().endswith("ing")), None)
                 if prog is None:
                     continue
@@ -68,8 +86,18 @@ class LinguisticFeatureDetector:
         for s in doc.sents:
             toks = list(s)
             for i, tok in enumerate(toks):
-                if tok.lemma_ != "be":
+                if tok.text.lower() != "be":
                     continue
+
+                if i-1 >= 0:
+                    prev_word = toks[i-1].text
+                    if prev_word in ["n't", "do", "would", "could", "should", "might", "must", "can", "may", "will", "shall"]:
+                        continue
+                if i-2 >= 0:
+                    prev2_word = toks[i-1].text
+                    if prev2_word in ["n't", "do", "would", "could", "should", "might", "must", "can", "may", "will", "shall"]:
+                        continue
+
                 prog = next((t for t in toks[i + 1:i + 5] if t.tag_ == "VBG" or t.text.lower().endswith("ing")), None)
                 if prog is None:
                     continue
@@ -148,7 +176,7 @@ class LinguisticFeatureDetector:
             steps += 1
         return h
 
-    def has_multiple_modals(self, sent: str, max_gap_tokens: int = 5) -> bool:
+    def has_multiple_modals(self, sent: str, max_gap_tokens: int = 1) -> bool:
         """Detect multiple modal verbs in close succession."""
         _SKIP_BETWEEN = {
             "not", "n't", "really", "just", "probably", "maybe", "kinda", "sorta", "still",
