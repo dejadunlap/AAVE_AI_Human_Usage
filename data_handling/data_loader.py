@@ -66,6 +66,10 @@ class DataLoader:
 
     @staticmethod
     def _clean_tweet(text: str) -> str:
+        
+        # Pull out just the tweet, not the metadata
+        text = text.split("\t")[5]
+
         """Clean tweet text by removing mentions, URLs, hashtags, emojis, etc."""
         # remove mentions
         text = re.sub(r"@\w+", " ", text)
@@ -77,6 +81,15 @@ class DataLoader:
         text = re.sub(r"[^\w\s'\u2019.]", " ", text, flags=re.UNICODE)
         # collapse multiple spaces
         text = re.sub(r"\s+", " ", text)
+
+        # Add punctuation so that multiple tweets don't get
+        # combined into one "sentence"
+        text = text.lower().strip()
+        if len(text) > 0:
+            if text[-1] in "abcdefghijklmnopqrstuvwxyz0123456789":
+                text = text + "."
+            text = text + " "
+
         return text.lower().strip()
 
     def _clean_interview(self, path: str) -> str:
