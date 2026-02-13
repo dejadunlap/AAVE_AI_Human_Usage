@@ -9,15 +9,18 @@ import matplotlib.pyplot as plt
 from collections import Counter, defaultdict
 from typing import List, Dict, Tuple, Any, Optional
 from spacy.language import Language
+import spacy
 
-from data_loader import DataLoader
-from linguistic_features import LinguisticFeatureDetector
+from data_handling import DataLoader
+from .linguistic_features import LinguisticFeatureDetector
+from analysis.feature_analysis import StatisticalTests
+from analysis.sentiment_analysis import SentimentAnalyzer
 
 
 class AAVEFeatureComparison:
     """
     Comprehensive AAVE feature analysis and comparison tool.
-    Analyzes linguistic features, sentiment, topics, and embeddings in text data.
+    Analyzes linguistic features, sentiment, topics in text data.
     """
     
     def __init__(self, path: str, data_type: str, human: bool = True, nlp: Optional[Language] = None):
@@ -30,7 +33,6 @@ class AAVEFeatureComparison:
             human: if True, restrict interview lines to human speaker (se)
             nlp: optional preloaded spaCy pipeline (saves reload time across runs)
         """
-        import spacy
         
         self.files = path
         self.data_type = data_type
@@ -51,7 +53,6 @@ class AAVEFeatureComparison:
         # Feature analyzers
         self.feature_detector = LinguisticFeatureDetector(self.nlp)
         self.sentiment_analyzer = SentimentAnalyzer()
-        self.embedding_analyzer = EmbeddingAnalyzer(self.nlp)
         self.stats = StatisticalTests()
         
         # Feature storage

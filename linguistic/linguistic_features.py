@@ -6,6 +6,7 @@ import re
 import nltk
 from typing import Optional
 from spacy.language import Language
+nltk.download('punkt_tab')
 
 
 class LinguisticFeatureDetector:

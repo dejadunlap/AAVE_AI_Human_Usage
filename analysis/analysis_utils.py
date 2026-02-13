@@ -1,5 +1,5 @@
 """
-Analysis utility functions for AAVE feature comparison.
+Analysis utility functions for feature comparison.
 """
 import pandas as pd
 from typing import List, Sequence

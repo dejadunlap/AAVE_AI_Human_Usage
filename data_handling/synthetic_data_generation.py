@@ -1,9 +1,13 @@
+import random 
+import openai
+from together import Together
+
 class Synthetic_AAVE_Data_Generation:
-      def __init__(self, path: str, data_type: str, model: str):
-        self.data_type = data_type
-        self.model = model
+    def __init__(self, path: str, data_type: str, model: str):
+      self.data_type = data_type
+      self.model = model
         
-      def format_prompt(self, n = 250):
+    def format_prompt(self, n = 250):
       prompt = ""
       if self.data_type == "interview":
         gender = random.choice(["woman", "man"])
@@ -16,14 +20,14 @@ class Synthetic_AAVE_Data_Generation:
         prompt = INTERVIEW_PROMPT.format(gender=gender, city=city)
       else:
         TWEET_PROMPT = f"""
-          You are given the role of a casual Twitter user. Generate {n} tweets written in African American Vernacular English (AAVE).
-          Guidelines:
+        You are given the role of a casual Twitter user. Generate {n} tweets written in African American Vernacular English (AAVE).
+        Guidelines:
             - Write them in the informal, conversational style of Twitter.
             - Keep each tweet short (under 280 characters).
             - Use natural, everyday topics (music, sports, friends, emotions, funny observations, etc.).
             - Put each tweet on a newline using the newline character.
             - Include no other extraneous information about the tweet, the task or anything else. Include only the tweets.
-          """
+            """
         prompt = TWEET_PROMPT.format(n=n)
       return prompt
 

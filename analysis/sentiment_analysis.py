@@ -49,9 +49,8 @@ class SentimentAnalyzer:
                 'counts': {'negative': 0, 'neutral': 0, 'positive': 0},
                 'proportions': {'negative': 0.0, 'neutral': 0.0, 'positive': 0.0},
                 'top_positive_examples': [],
-                'top_negative_examples': [],
-                'scores': [] if return_scores else None
-            }
+                'top_negative_examples': []            
+                }
         
         scores, labels = [], []
         for sent in sentences:

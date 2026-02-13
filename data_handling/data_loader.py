@@ -56,13 +56,13 @@ class DataLoader:
                             fpath = os.path.join(root, fname)
                             with open(fpath, "r", encoding="utf-8", errors="ignore") as fh:
                                 for line in fh:
-                                    self.dataset += self._clean_tweet(line)
+                                    self.dataset += self._clean_tweet(nltk.sent_tokenize(line))
                                     self.total_sentences += 1
             else:
                 with open(self.path, "r", encoding="utf-8", errors="ignore") as fh:
                     for line in fh:
                         self.dataset += self._clean_tweet(line)
-                        self.total_sentences += 1
+                        self.total_sentences += len(nltk.sent_tokenize(line))
 
     @staticmethod
     def _clean_tweet(text: str) -> str:
